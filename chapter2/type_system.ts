@@ -108,6 +108,69 @@
     greet2(developer); // Hello, I'm zig
 }
 
+{
+    interface Cube {
+        width: number;
+        height: number;
+        depth: number;
+    }
 
+    function addLines(c: Cube){
+        let total = 0;
+
+        for(const axis of Object.keys(c)){
+            const length = c[axis];
+
+            total += length;
+        }
+    }
+
+    // 구조적 타이핑의 특징 때문에 예기치 못한 결과가 발생한다
+    // Cube의 값을 모두 가지고 있기 때문에 Cube 타입으로 인정받지만 추가된 필드를 제한하지 못해 
+    // 아래 함수를 실행하면 에러가 발생한다
+    const namedCube = {
+        width: 5,
+        height: 5,
+        depth: 4,
+        name: "SweetCube"
+    };
+
+    addLines(namedCube);
+}
+
+{
+    function add(x, y){
+        return x + y;
+    }
+
+    // 위 코드는 아래와 같이 암시적 타입 변환이 일어난다
+    // 이처럼 타입스클비트에서는 필요에 따라 타입을 생략할 수도 있고 타입을 점진적으로 추가할 수도 있다
+    // 타입스크립트는 컴파일타임에 프로그램의 모든 타입을 알고 있을 때 최상의 결과를 보여준다
+    // 타입스크립트는 자바스크립트의 슈퍼셋 언어이기 때문에 모든 자바스크립트 코드는 타입스크립트 코드라고 봐도 무방하다
+    //function add(x: any, y: any): any;
+
+    // any 타입은 타입스크립트 내 모든 타입의 종류를 포함하는 가장 상위 타입
+    // 컴파일 옵션이 noImplicaitAny 값이 true일때는 에러가 발생
+}
+
+{
+    // 정적 타입의 정확성을 100% 보장하지 않아 타입이 올바르게 정해지지 않으면 런타임에서 에러가 발생하기도 한다
+    const names = ["zig", "colin"];
+    console.log(names[2].toUpperCase());
+    //TypeError: Cannot read property 'toUpperCase' of undefined
+}
+
+{
+    // 모든 자바스크립트 코드는 타입스크립트라고 볼 수 있지만 역은 성립하지 않는다
+    // 따라서 해당 코드를 자바스크립트에서 실행하면 에러가 발생한다
+    function greet3(name: string){
+        console.log("Hello", name);
+    }
+
+    // 타입스크립트 컴파일러는 타입스크립트뿐만 아니라 자바스크립트 프로그램에서도 유용하게 사용할 수 있다
+    // 해당 코드를 타입스크립트 컴파일러로 실행하면 초깃값으로 타입을 추론하여 toUppercase 대신 toUpperCase 메서도르 대체할 것을 제안한다
+    // let developer = "Colin";
+    // console.log(developer.toUppercase());
+}
 
 
