@@ -273,3 +273,23 @@
 
     printDay("TUES", "wanna go home");
 }
+
+{
+    enum MyClolors{
+        BLUE = "#0000FF",
+        YELLOW = "#FFFF00",
+        MINT = "#2AC1BC",        
+    }
+
+    // palette = MINT 속성을 갖는 객체 
+    function whatMintColor(palette: {MINT: string}){
+        return palette.MINT;
+    }
+
+    // MyClolors = MINT 속성을 가지고 있기 때문에 코드가 정상적으로 실행된다
+    whatMintColor(MyClolors);
+
+    // 타입스크립트에서 어떠한 심볼이 값으로 사용된다는 것은 컴파일러를 사용해서 타입스크립트 파일을 자바스크립트 파일로 변환해도 
+    // 여전히 자바스크립트 파일에 해당 정보가 남아있음을 의미한다 
+    // 반면 타입으로만 사용되는 요소는 컴파일 이후에 자바스크립트 파일에서 해당 정보가 사라진다
+}
