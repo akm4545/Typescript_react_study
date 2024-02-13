@@ -173,4 +173,103 @@
     // console.log(developer.toUppercase());
 }
 
+{
+    // type 또는 interface 키워드로 커스텀 타입을 정의할 수 있다
+    type Person = {
+        name: string;
+        age: number;
+    };
 
+    interface Person {
+        name: string;
+        age: number;
+    }
+}
+
+{
+    // 값 공간과 타입 공간의 이름은 서로 충돌하지 않기 때문에 타입과 변수를 같은 이름으로 정의할 수 있다
+    // 타입스크립트 문법 type으로 선언한 내용은 자바스크립트 런타임에서 제거되기 떄문이다
+    type Developer = {isWorking: true};
+    const Developer = {isTyping: true};
+
+    type Cat = {name: string, age: number};
+    const Cat = {slideStuffOffTheTable: true};
+}
+
+{
+    function email(options: {person: Person; subject: string; body: string}){
+
+    }
+
+    // 자바스크립트의 구조 분해 할당을 사용시 
+    function email({person, subject, body}{
+
+    })
+
+    // 타입스크립트로 구조 분해 할당을 사용시
+    function email({
+        person,
+        subject,
+        body,
+    } : {
+        person: Person;
+        subject: string,
+        body: string,
+    }) {
+
+    }
+}
+
+{
+    // 자바스크립트에서 클래스는 객체 인스턴스를 더욱 쉽게 생성하기 위한 문법 기능으로 실제 동작은 함수와 같다
+    // 동시에 클래스는 타입으로도 사용된다
+    class Rectangle {
+        constructor(height, width){
+            this.height = height;
+            this.width = width;
+        }
+    }
+
+    const rect1 = new Rectangle(5, 4);
+
+    // 타입스크립트 코드에서 클래스는 값과 타입 공간 모두에 포함될 수 있다
+    // 타입스크립트에서 클래스는 타입 애너테이션으로 사용할 수 있지만 런타임에서 객체로 변환되어 자바스크립트의 값으로 사용된다
+    class Developer {
+        name: string;
+        domain: string;
+
+        constructor(name: string, domain: string){
+            this.name = name;
+            this.domain = domain;
+        }
+    }
+
+    const me: Developer = new Developer("zig", "frontend");
+}
+
+{
+    // 클래스와 마찬가지로 타입스크립트 문법인 enum 역시 런타임에 객체로 변환되는 값이다
+    // enume도 클래스처럼 타입 공간에서 타입을 제한하는 역할을 하지만 자바스크립트 런타임에서 실제 값으로도 사용될 수 있다
+    enum WeekDays {
+        MON = "Mon",
+        TUES = "Tues",
+        WEDNES = "Wednes",
+        THURS = "Thurs",
+        FRI = "Fri",
+    }
+
+    // 해당 구문으로 나온 타입은 유니온 타입이 된다
+    // type 'MON' | 'TUES' ...
+    // enum을 keyof typeof를 사용하여 유니온 타입으로 만들어 값을 제한하는 코드
+    type weekDaysKey = keyof typeof WeekDays;
+
+    function printDay(key: weekDaysKey, message: string){
+        const day = WeekDays[key];
+
+        if(day <= WeekDays.WEDNES){
+            console.log(`It's still ${day}day, ${message}`);
+        }
+    }
+
+    printDay("TUES", "wanna go home");
+}
