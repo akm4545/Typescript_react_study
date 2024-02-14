@@ -138,6 +138,10 @@
 }
 
 {
+    // enum 타입은 타입스크립트에서 지원하는 특수한 타입이다
+    // 타입스크립트는 명명한 각 멤버의 값을 스스로 추론한다
+    // 기본적은 추론 방식은 숫자 0부터 1씩 늘려가며 값을 할당하는 것이다
+
     enum ProgrammingLanguage {
         Typescript, // 0
         Javascript, // 1
@@ -148,9 +152,80 @@
         Go, // 6
     }
 
+    // 각 멤버의 접근은 자바스크립트에서 객체의 속성에 접근하는 방식과 동일하다
     ProgrammingLanguage.Typescript; //0
     ProgrammingLanguage.Rust; //5
     ProgrammingLanguage["Go"]; //6
 
+    // 역방향 접근도 가능하다
     ProgrammingLanguage[2]; //Java
+
+    // 명시적으로 값을 할당 할 수 있다
+    // 값이 누락된 멤버는 아래와 같은 방식으로 값이 할당된다
+    enum ProgrammingLanguage2 {
+        Typescript = "Typescript",
+        Javascript = "Javascript",
+        Java = 300,
+        Python = 400,
+        Kotlin, // 401
+        Rust, // 402
+        Go, // 403
+    }
+
+    // 열거형은 변수 타입으로도 지정할 수 있다
+    // 이때 열거형을 타입으로 가지는 변수는 해당 열거형이 가지는 모든 멤버를 값으로 받을 수 있다
+    // 이런 특성은 코드의 가독성을 높여준다
+    enum ItemStatusType{
+        DELIVERY_HOLD = "DELIVERY_HOLD", // 배송보류
+        DELIVERY_READY = "DELIVERY_READY", // 배송 준비 중
+        DELIVERING = "DELIVERING", // 배송 중 
+        DELIVERED = "DELIVERED" // 배송 완료
+    }
+
+    // itemStatus 타입이 문자열로 지정된 경우와 비교하기
+    // 타입 안정성 : ItemStatusType에 명시되지 않은 문자열은 인자로 받을 수 없다
+    // 명확한 의미 전달과 높은 응집력: ItemStatusType타입이 다루는 값이 무엇인지 명확하다 아이템 상태에 대한 값을 
+    // 모아놓은 것으로 응집력이 뛰어나다
+    // 가독성: 응집도가 높기 때문에 말하고자 하는 바가 명확하다
+    const checkItemAvailable = (itemStatus: ItemStatusType) => {
+        switch (itemStatus) {
+            case ItemStatusType.DELIVERY_HOLD:
+            case ItemStatusType.DELIVERY_READY:
+            case ItemStatusType.DELIVERING:
+                return false;
+            case ItemStatusType.DELIVERED:
+            default:
+                return true;
+        }
+    }
+
+    // 역방향으로 접근 시 할당된 값을 넘어서는 범위로 접근해도 막지 않는다
+    ProgrammingLanguage[200]; //undefined를 출력하고 막지 않는다
+
+    // 이를 방지하려면 const 키워드로 선언하면 된다
+    const enum ProgrammingLanguage3 {
+
+    }
+
+    const enum NUMBER {
+        ONE = 1,
+        TWO = 2,
+    }
+
+    // const로 선언하여도 숫자 상수로 관리되는 열거혀은 선언한 값 이외의 값을 할당하거나 접근할 때 이를 방지하지 못한다
+    const myNumber: NUMBER = 100;
+
+    // 따라서 문자열 상수 방식으로 열거형을 사용하는 것이 숫자 상수 방식보다 더 안전하며 의도치 않은 값의 할당이나
+    // 접근을 방지하는데 도움이 된다
+    const enum STRING_NUMBER {
+        ONE = "ONE",
+        TWO = "TWO"
+    }
+
+    const myStringNumber: STRING_NUMBER = "THREE";
+
+    // 열거형은 타입스크립트 코드가 자바스크립트로 변환될 때 즉시 실행 함수 형식으로 변환된다
+    // 이때 일부 번들러에서 트리쉐이킹 과정 중 즉시 실행 함수로 변환된 값을 사용하지 않는 코드로 
+    // 인식하지 못하는 경우가 발생 할 수 있다
+    // 이러한 문제를 해결하기 위해 앞서 언급했던 const enum 또는 as constassertion을 사용해서 유니온 타입으로 열거형과 동일한 효과를 얻는 방법이 있다
 }
