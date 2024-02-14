@@ -95,3 +95,62 @@
     // 타입스크립트에서는 조건부 타입을 결정할 때 특정 조건을 만족하지 않는 경우에 엄격한 타입 검사 목적으로 never 타입을 명시적으로 
     // 사용하기도 한다
 }
+
+{
+    // array 타입 선언
+    const array: number[] = [1, 2, 3];
+    const array2: Array<number> = [1, 2, 3];
+
+    // 유니온 타입을 사용 여러 타입을 허용
+    const array3: Array<number | string> = [1, "string"];
+    const array4: number[] | string[] = [1, "string"];
+
+    // array4는 다음과 같이 사용할 수도 있다
+    const array5: (number | string)[] = [1, "string"];
+}
+
+{
+    // 튜플은 타입스크립트의 타입 시스템과 대괄호를 사용해서 선언할 수 있다
+    // 이때 대괄호 안에 선언하는 타입의 개수가 튜플이 가질 수 있는 원소의 개수를 나타낸다
+    let tuple: [number] = [1];
+
+    // 불가능
+    tuple = [1, 2];
+    tuple = [1, "string"];
+
+    // 여러 타입과 혼합도 가능하다
+    let tuple: [number, string, boolean] = [1, "string", true];
+
+    // 스프레드 연산자 (...) 을 이용하여 특정 인덱스에서 요소를 명확한 타입으로 선언하고 
+    // 나머지 인덱스에서는 배열처럼 동일한 자료형의 원소를 개수 제한 없이 받도록 할 수 있다
+    const httpStatusFromPaths: [number, string, ...string[]] = [
+        400,
+        "Bad Request",
+        "/users/:id",
+        "/users/:userId",
+        "/users/:uuid"
+    ];
+
+    // 옵셔널(?) = 특정 속성 또는 매개변수가 값이 있을 수도 있고 없을 수도 있는 것을 의미
+    const optionalTuple1: [number, number, number?] = [1, 2];
+    // 3번째 인덱스에 해당되는 수자형 원소는 있어도 없어도 된다
+    const optionalTuple2: [number, number, number?] = [1, 2, 3];
+}
+
+{
+    enum ProgrammingLanguage {
+        Typescript, // 0
+        Javascript, // 1
+        Java, // 2
+        Python, // 3
+        Kotlin, // 4
+        Rust, // 5
+        Go, // 6
+    }
+
+    ProgrammingLanguage.Typescript; //0
+    ProgrammingLanguage.Rust; //5
+    ProgrammingLanguage["Go"]; //6
+
+    ProgrammingLanguage[2]; //Java
+}
