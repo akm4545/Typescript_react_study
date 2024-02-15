@@ -65,3 +65,57 @@
         name: string;
     }
 }
+
+{
+    // 인덱스드 액세스 타입은 다른 타입의 특정 속성이 가지는 타입을 조회하기 위해 사용
+    type Example = {
+        a: number;
+        b: string;
+        c: boolean;
+    };
+
+    // 인덱스에 사용되는 타입 또한 그 자체로 타입이기 떄문에 유니온 타입, keyof, 타입 별칭 등의 표현을 사용 가능
+    type IndexedAccess = Example["a"];
+    // a | b 는 각각 number, string 타입이므로 유니온 타입이 된다
+    type IndexedAccess2 = Example["a" | "b"]; // number | string
+    type IndexedAccess3 = Example[keyof Example]; //number | string | boolean
+
+    // ExAlias "b" 혹은 "c" 만 올 수 있다
+    type ExAlias = "b" | "c";
+    // Example의 b | c 타입은 string, boolean 이므로 stirng | boolean 타입이 된다
+    type IndexedAccess4 = Example[ExAlias]; // string | boolean
+
+    // 배열의 요소 타입을 조회하기 위해 인덱스드 액세스 타입을 사용하는 경우가 있다
+    // 배열 타입의 모든 요소는 전부 동일한 타입을 가지며 배열의 인덱스는 숫자 타입이다
+    const PromotionList = [
+        {type: "product", name: "chicken"},
+        {type: "product", name: "pizza"},
+        {type: "card", name: "cheer-up"}
+    ];
+
+    // 따라서 number로 인덱싱하여 배열 요소를 얻은 다음에 typeof 연산자를 붙여주면 해당 배열 요소의 타입을 가져올 수 있다
+    type ElementOf<T> = typeof T[number];
+    //type PromotionItemType = {type: string; name: stirng;}
+    type PromotionItemType = ElementOf<PromotionList>;
+}
+
+{
+    // 맵드 타입
+    // 다른 타입을 기반으로 한 타입을 선언할 때 사용하는 문법 
+    // 인덱스 시그니처 문법을 사용해서 반복적인 타입 선언을 효과적으로 줄일 수 있다
+    type Example = {
+        a: number;
+        b: string;
+        c: boolean;
+    };
+
+    // SubSet<타입>
+    type Subset<T> = {
+        // []
+        [K in keyof T]?: T[K];
+    };
+
+    const aExample: Subset<Example> = {a: 3};
+    const bExample: Subset<Example> = {b: "hello"};
+    const acExample: Subset<Example> = {a: 4, c: true};
+}
