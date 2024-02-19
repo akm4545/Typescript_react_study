@@ -111,11 +111,93 @@
 
     // SubSet<타입>
     type Subset<T> = {
-        // []
+        // [in = for in]
+        // [Example의 키값을 뽑음]? : Example[키값] = (인덱스 시그니처 문법 = 타입 추출)
         [K in keyof T]?: T[K];
     };
 
+    // 즉 Subset으로 뽑힌 타입은 기존 Example의 데이터 셋을 따라가되 옵셔널을 사용해서 꼭 속성이 다 들어가지 않아도 된다
     const aExample: Subset<Example> = {a: 3};
     const bExample: Subset<Example> = {b: "hello"};
     const acExample: Subset<Example> = {a: 4, c: true};
+    
+
+    // 맵드 타입은 ?, readonly를 붙이는것 외에도 제거하는것도 가능하다
+    type ReadOnlyEx = {
+        readonly a: number;
+        readonly b: string;
+    };
+
+    // 앞에 - 를 붙이면 제거 가능
+    type CreateMutable<Type> = {
+        -readonly [Property in keyof Type]: Type[Property];
+    };
+
+    type ResultType = CreateMutable<ReadOnlyEx>; // {a: number; b: string}
+
+    type OptionalEx = {
+        a?: number;
+        b?: string;
+        c: boolean;
+    };
+
+    type Concrete<Type> = {
+        [Property in keyof Type]-?: Type[Property];
+    };
+
+    type ResultType = Concrete<OptionalEx>; // {a: number; b: string, c: boolean}
+}
+
+{
+    // 배민 예시 맵드타입
+    const BottomSheetMap = {
+        RECENT_CONTACTS: RecentContactsBottomSheet,
+        CARD_SELECT: CardSelectBottomSheet,
+        SORT_FILTER: SortFilterBottomSheet,
+        PRODUCT_SELECT: ProductSelectBottomSheet,
+        REPLY_CARD_SELECT: ReplyCardSelectBottomSheet,
+        RESEND: ResendBottomSheet,
+        STICKER: StickerBottomSheet,
+        BASE: null,
+    };
+
+    export type BOTTOM_SHEET_ID = keyof typeof BottomSheetMap;
+
+    // 불필요한 반복
+    type BottomSheetStore = {
+        RECENT_CONTACTS: {
+            resolver?: (payload: any) => void;
+            args?: any;
+            isOpened: boolean;
+        };
+        CARD_SELECT: {
+            resolver?: (payload: any) => void;
+            args?: any;
+            isOpened: boolean;
+        };
+        SORT_FILTER: {
+            resolver?: (payload: any) => void;
+            args?: any;
+            isOpened: boolean;
+        };
+        //...
+    }
+
+    //Mapped Types를 통해 효율적으로 타입을 선언
+    type BottomSheetStore = {
+        [index in BOTTOM_SHEET_ID]: {
+            resolver?: (payload: any) => void;
+            args?: any;
+            isOpened: boolean;
+        };
+    };
+
+    // as를 붙여 새로운 키를 지정하는것도 가능
+    type BottomSheetStore = {
+        [index in BOTTOM_SHEET_ID as `${index}_BOTTOM_SHEET`]: {
+            resolver?: (payload: any) => void;
+            args?: any;
+            isOpened: boolean;
+        };
+    };
 }
