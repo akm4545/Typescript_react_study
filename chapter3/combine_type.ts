@@ -201,3 +201,81 @@
         };
     };
 }
+
+{
+    //템플릿 리터럴 타입
+    // 템플릿 리터럴 문자열을 사용하여 문자열 리터럴 타입을 선언할 수 있다
+    type Stage = 
+        | "init"
+        | "select-image"
+        | "edit-image"
+        | "decorate-card"
+        | "capture-image";
+
+    type StageName = `${Stage}-stage`;
+    // 'init-stage' | 'select-image-stage' | 'edit-image-stage' ...
+}
+
+{
+    // 제네릭 타입 
+    // 보통 변수명으로 T(Type), E(Element), K(Key), V(Value)등 사용
+    type ExampleArrayType<T> = T[];
+
+    const array1: ExampleArrayType<string> = ["치킨", "피자", "우동"];
+
+    // any 타입과의 차이점
+    type ExampleArrayType2 = any[];
+
+    const array2: ExampleArrayType2 = [
+        "치킨",
+        {
+            id:0,
+            name: "치킨",
+            price: 20000,
+            quantity: 1
+        },
+        99,
+        true
+    ];
+
+    // 제네릭 함수 호출시 <>안에 무조건 타입을 명시해야 하는것은 아니다
+    // 타입을 명시하는 부분을 생략하면 컴파일러가 인수를 보고 타입을 추론해준다
+    function exampleFunc<T>(arg: T): T[]{
+        return new Array(3).fill(arg);
+    }
+
+    exampleFunc("hello"); //T는 string으로 추론된다
+
+    // 특정 요소 타입을 알 수 없을 때는 제네릭 타입에 기본값을 추가할 수 있다
+    interface SubmitEvent<T = HTMLElement> extends SyntheticEvent<T> {
+        submitter: T;
+    }
+
+    // 제네릭은 어떤 타입이든 될 수 있으므로 특정 타입에만 존재하는 멤버를 참조하려 하면 안된다
+    function exampleFunc2<T>(arg: T): number{
+        return arg.length; //에러
+    }
+
+    // 제네릭 꺾쇠괄호 내부의 length 속성을 가진 타입만 받는다 라는 제약을 걸어주면 length 속성을 사용할 수 있다
+    interface TypeWithLength{
+        length: number;
+    }
+
+    function exampleFunc3<T extends TypeWithLength>(arg: T): number{
+        return arg.length;
+    }
+
+    // 제네릭 사용시 파일 확장자가 tsx일때 화살표 함수에 제네릭을 사용하면 에러가 발생한다
+    // tsx = 타입스크립트 + JSX 이므로 제네릭의 꺾쇠괄호와 태그의 꺾쇠괄호를 혼동하여 문제가 생긴다
+
+    // 에러
+    const arrowExampleFunc = <T>(arg: T): T[] => {
+        return new Array(3).fill(arg);
+    };
+
+    // 이럴경우 제네릭 부분에 extends 키워드를 사용하여 컴파일러에게 특정 타입의 하위 타입만 올 수 있음을 확실히 알려주면 된다
+    // 보통 제네릭을 사용할 때는 function 키워드로 선언하는 경우가 많다
+    const arrowExampleFunc2 = <T extends {}> (arg: T): T[] => {
+        return new Array(3).fill(arg);
+    }
+}
