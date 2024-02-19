@@ -119,4 +119,123 @@
 
     // 제네릭의 유연성을 잃지 않으면서 타입을 제약해야 할 때는 타입 매개변수에 유니온 타입을 상속해서 선언하면 된다
     <Key extends string | number>
+
+    // 제네릭을 상단과 같이 선언하면 하나의 여러 타입을 받을 수 있지만 2개 이상의 제네릭은 받을 수 없다
+    // 하단과 같이선언하면 제네릭을 여러개 사용할 수 있다
+    export class APIResponse<Ok, Err = string> {
+        private readonly data: Ok | Err | null;
+        private readonly status: ResponseStatus;
+        private readonly statusCode: number | null;
+
+        constructor(
+            data: Ok | Err | null,
+            statusCode: number | null,
+            status: ResponseStatus
+        ) {
+            this.data = data;
+            this.status = status;
+            this.statusCode = statusCode;
+        }
+
+        public static Success<T, E = string>(data: T): APIResponse<T, E> {
+            return new this<T, E>(data, 200m ResponseStatus.SUCCESS);
+        }
+
+        public static Error<T, E = unknown>(init: AxiosError): APIResponse<T, E> {
+            if(!init.response){
+                return new this<T, E>(null, null, ResponseStatus.CLIENT_ERROR);
+            }
+
+            if(!init.response.data?.result){
+                return new this<T, E>(
+                    null,
+                    init.response.status,
+                    ResponseStatus.SERVER_ERROR
+                );
+            }
+
+            return new this<T, E>(
+                init.response.data.result,
+                init.response.status,
+                ResponseStatus.FAILURE
+            );
+        }
+
+        //...
+    }
+
+    // 사용하는쪽 코드
+    const fetchShopStatus = async(): Promise<APIResponse<IShopResponse | null>> => {
+        //...
+        return (await API.get<IShopResponse | null>("/v1/main/shop", config)).map((it) => it.result);
+    };
+}
+
+{
+    //  제네릭의 장점은 다양한 타입을 받게 함으로써 코드를 효율적으로 재사용할 수 있는 것이다
+    // 실무에서느 API 응답 값의 타입을 지정할때 많이 쓴다
+
+    // 응답값에 따라 달라지는 data를 제네릭 타입으로 사용하는 예시
+    export interface MobileApiResponse<Data> {
+        data: Data;
+        statusCode: string;
+        statusMessage?: string;
+    }
+
+    export const fetchPriceInfo = (): Promise<MobileApiResponse<PriceInfo>> => {
+        const priceUrl = "https: ~~"; //url 주소
+
+        return request({
+            method: "GET",
+            url: priceUrl,
+        });
+    };
+
+    export const fetchOrderInfo = (): Promise<MobileApiResponse<Order>> => {
+        const orderUrl = "https: ~~"; //url 주소
+
+        return request({
+            method: "GET",
+            url: orderUrl,
+        });
+    }
+
+    // 제네릭 타입을 굳이 필요하지 않은데 사용한 예시
+    type GType<T> = T;
+    type RequirementType = "USE" | "UN_USE" | "NON_SELECT";
+
+    interface Order {
+        getRequirement(): GType<RequirementType>;
+    }
+
+    // 해당 코드는 아래처럼 사용 가능
+    type RequirementType = "USE" | "UN_USE" | "NON_SELECT";
+
+    interface Order {
+        getRequirement(): GType<RequirementType>;
+    }
+}
+
+{
+    // any를 사용하면 모든 타입을 허용하기 때문에 사실상 자바스크립트와 동일한 방식으로 코드를 작성한는것과 같다
+    type ReturnType<T = any> = {
+        //...
+    };
+}
+
+{
+    // 가독성을 고쳐하지 않은 사용
+    // 제네릭이 과하게 사용되면 가독성을 해치기 때문에 부득이한 상황을 제외하고 복잡한 제네릭은 의미 단위로 분할해서 사용
+    ReturnType<Record<OrderType, Partial<Record<CommonOrderStatus | CommonReturnStatus, Partial<Record<OrderRoleType, String[]>>>>>>;
+
+    // 분할 사용 예시
+    type CommonStatus = CommonOrderStatus | CommonReturnStatus;
+
+    type PartialOrderRole = Partial<Record<OrderRoleType, string[]>>;
+
+    type RecordCommonOrder = Record<CommonStatus, PartialOrderRole>;
+
+    type RecordOrder = Record<OrderType, Partial<RecordCommonOrder>>;
+
+    ReturnType<RecordOrder>;
 }
