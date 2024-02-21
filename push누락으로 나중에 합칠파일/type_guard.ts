@@ -48,3 +48,30 @@
         }
     }
 }
+
+{
+    interface BasicNoticeDialogProps{
+        noticeTitle: string;
+        noticeBody: string;
+    }
+
+    interface NoticeDialogWithCookieProps extends BasicNoticeDialogProps {
+        cookieKey: string;
+        noForADay?: boolean;
+        neverAgain?: boolean;
+    }
+
+    export type NoticeDialogProps = 
+        | BasicNoticeDialogProps
+        | NoticeDialogWithCookieProps;
+
+    // NoticeDialogProps 타입이 BasicNoticeDialogProps인지 NoticeDialogWithCookieProps인지에
+    // 따라 렌더링 하는 컴포넌트가 달라지도록 하고 싶다면
+
+    const NoticeDialog: React.FC<NoticeDialogProps> = (props) => {
+        if("cookieKey" in props) return <NoticeDialogWithCookie {...props} />;
+        
+        return <NoticeDialogBase {...props} />;
+    }
+
+}
