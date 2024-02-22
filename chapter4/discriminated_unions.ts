@@ -60,7 +60,67 @@
     type AlertError1 = {
         errorType: "ALERT";
         errorCode: string;
-        errorMessag: string;
+        errorMessage: string;
         onConfirm: () => void;
     };
+
+    type ErrorFeedbackType1 = TextError1 | ToastError1 | AlertError1;
+    // errorType의 타입을 직접 텍스트로 지정해줬기 떄문에 타입별 호환 불가
+    // 따라서 text 타입에 없는 필드는 에러 발생
+    const errorArr1: ErrorFeedbackType1[] = [
+        {errorType: "TEXT", errorCode: "100", errorMessage: "텍스트 에러"},
+        {errorType: "TOAST", errorCode: "200", errorMessage: "토스트 에러", toastShowDuration: 3000},
+        {errorType: "ALERT", errorCode: "300", errorMessage: "얼럿 에러", onConfirm: () => {}},
+        {errorType: "TEXT", errorCode: "999", errorMessage: "잘못된 에러", toastShowDuration: 3000, onConfirm: () => {}},
+    ]
+}
+
+{
+    // 식별할 수 있는 유니온 사용시 유닛 타입으로 선언되어야 정상동작
+    // 유닛 타입 = 다른 타입으로 쪼개지지 않고 오직 하나의 정확한 값을 가지는 타입
+    // 리터럴 타입을 비롯 true, 1 과 같은 타입
+    // 다양한 타입을 할당 할 수 있는 void, string, number는 불가
+
+    interface A {
+        value: "a"; //unit type
+        answer: 1;
+    };
+
+    interface B {
+        value: string; //not unit type
+        answer: 2;
+    }
+
+    interface C {
+        value: Error; //instantiable type
+        answer: 3;
+    }
+
+    type Unions = A | B | C;
+    function handle(param: Unions){
+        // 판별자가 value 일때
+        param.answer; //1 | 2 | 3
+
+        // a가 리터럴 타입이므로 타입이 좁혀진다
+        // 단 이는 string 타입에 포함되므로 param은 A 또는 B 타입으로 좁혀진다
+        if(param.value === "a"){
+            param.answer; // 1 | 2 return;
+        }
+
+        // 유닛 타입이 아니거나 인스턴스화할 수 있는 타입일 경우 타입이 좁혀지지 않는다
+        if(typeof param.value === "string"){
+            param.answer; // 1 | 2 | 3 return;
+        }
+        if(param.value instanceof Error){
+            param.answer; // 1 | 2 | 3 return; 
+        }
+
+        // 판별자가 answer 일떄
+        param.value; //string | Error
+
+        // 판별자가 유닛 타입이므로 타입이 좁혀진다
+        if(param.answer === 1){
+            param.value; // a
+        }
+    }
 }
