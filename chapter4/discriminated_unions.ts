@@ -144,13 +144,20 @@
     const getProductName1 = (productPrice: ProductPrice1): string => {
         if(productPrice === "10000") return "배민상품권 1만 원";
         if(productPrice === "20000") return "배민상품권 2만 원";
+        // 타입 업데이트 시 해당 코드도 같이 추가되어야 한다
+        // 하지만 getProductName1 함수를 수정하지 않아도 별도 에러가 발생하지는 않아 실수할 여지가 있다
         // if(productPrice === "5000") return "배민상품권 5천 원";
         else{
+            // 때문에 정의하지 않은 타입은 else 로 분기하게 되고 에러가 발생한다
+            // 모든 케이스에 대해 분기 처리를 해주지 않았을때 컴파일타임 에러가 발생하게 하는것을 Exhaustiveness Cehcking이라 한다
             exhaustiveCheck(productPrice); //Error: Argument of type 'string' is not assingable to parameter of type 'never'
             return "배민상품권";
         }
     };
 
+    // 해당 함수의 타입은 never로 어떠한 값도 받을 수 없다
+    // 만일 값이 들어온다면 에러를 내뱉는다
+    // else문에 사용하여 앞의 조건문에서 모든 타입에 대한 분기 처리를 강제한다
     const exhaustiveCheck = (param: never) => {
         throw new Error("type error!");
     };
