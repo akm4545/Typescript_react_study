@@ -68,4 +68,50 @@
         companyName: string;
         // ...
     }
+
+    type PayMethodType = PayMethodInfo<Card> | PayMethodInfo<Bank>;
+
+    // 커스텀 훅
+    // 반환값 UseQueryResult
+    export const useGetRegisteredList = (
+        type: "card" | "appcard" | "bank"
+    ) : UseQueryResult<PayMethodType[]> => {
+        const url = `beaminpay/codes/${type === "appcard" ? "card" : type}`;
+
+        // fetcherFactory = axios 래핑 함수
+        // 서버에서 데이터를 받아온 후 onSuccess 콜백 함수 실행
+        // fetcher 호출 시 반환 타입은 PocketInfo 타입이다
+        const fetcher = fetcherFactory<PayMethodType[]>({
+            onSuccess: (res) => {
+                const usablePocketList = 
+                res?.filter(
+                    (pocket: PocketInfo<Card> | PocketInfo<Bank>) => 
+                        pocket?.useType === "USE"
+                ) ?? [];
+
+                return usablePocketList; 
+            },
+        });
+
+        // useCommonQuery = useQuery 래핑 함수
+        // useQuery의 반환 데이터를 T(PayMethodType) 타입으로 반환 
+        // 최종적 반환 타입은 PayMethodType 이지만 사용하는 쪽에서는 PocketInfo일 가능성도 있다
+        // PocketInfo로 받을 시 Card | Bank 값만 할당되고 PayMethodInterface는 증발
+        // 인자로 넣는 타입에 알맞는 타입을 반환하려고 했지만
+        // 타입 설정이 유니온으로만 되어있기 때문에 타입스크립트는 해당 타입에 맞는 Data 타입 추론 불가
+        const result = useCommonQuery<PayMethodType[]>(url, undefined, fetcher);
+
+        return result;
+    }
 }
+
+{
+    // extends 조건부 타입 활용하여 개선
+
+    // type PayMethodType = PayMethodInfo<Card> | PayMethodInfo<Bank>; 개선
+    type PayMethodType<T extends "card" | "appcard" | "bank"> = T extends
+        | "card"
+        | "appcard"
+        ? Card
+        : Bank;
+} 
