@@ -240,15 +240,18 @@
     // 권한 검사가 필요없는 subMenus나 pages가 존재하는 name은 따로 처리해야 한다 (즉 name이 권한의 역할이 아닌 이름의 역할이 부여되었을 떄) 
     type PermissionNames = "기기 정보 관리" | "안전모 인증 관리" | "운행 여부 조회";
 
+    // subMenus의 타입을 ReadonlyArray로 변경 
     export interface MainMenu {
         //...
         subMenus?: ReadonlyArray<SubMenu>;
     }
 
+    // as const 키워드를 추가하여 불변 객체로 정의
     export const menuList = [
         // ...
     ] as const;
 
+    // Route관련 타입의 name은 menuList의 name에서 추출한 PermissionNames만 올 수 있도록 변경
     interface RouteBase {
         name: PermissionNames;
         path: string;
@@ -265,6 +268,33 @@
         | {
             name: PermissionNames;
             path: string;
-            component?: COmponentType;
+            component?: ComponentType;
         }
+
+    // 조건에 맞는 값을 추출할 UnpackMenuNames 타입
+    // 불변객체인 MenuItem배열만 입력으로 받을 수 있도록 제한
+    // infer U 를 사용하여 배열 내부 타입을 추론
+    type UnpackMenuNames<T extends ReadonlyArray<MenuItem>> = T extends
+    ReadonlyArray<infer U>
+        // U가 MainMenu이라면
+        ? U extends MainMenu
+            // subMenus를 infer V로 추출
+            ? U["subMenus"] extends infer V
+                // subMenus = 옵셔널(subMenus?) 타입 ReadonlyArray<SubMenu>
+                // V가 존재한다면 UnpackMenuNames에 다시 전달
+                ? V extends ReadonlyArray<SubMenu>
+                    ? UnpackMenuNames<V>
+                    // 존재하지 않는다면 MainMenu의 name은 권한에 해당하므로 U["name"]
+                    : U["name"]
+                // 이외에는 never타입으로 리턴하여 잘못된 값을 막음 
+                : never
+            // U가 MainMenu가 아니라 SubMenu에 할당할 수 있다면 (U는 SubMenu 타입이기 때문에)
+            : U extends SubMenu
+            // U["name"] 은 권한에 해당
+            ? U["name"]
+            : never
+        : never;
+
+    // 위처럼 infer를 사용하여 풀기도 한다
+    export type PermissionNames = UnpackMenuNames<typeof menuList>; //[기기 내역 관리, 헬멧 인증 관리, 운행 관리]
 }
