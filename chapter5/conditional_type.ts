@@ -109,9 +109,42 @@
     // extends 조건부 타입 활용하여 개선
 
     // type PayMethodType = PayMethodInfo<Card> | PayMethodInfo<Bank>; 개선
+    // PayMethodType의 제네릭으로 받는 값이 "card", "appcard" 일때 PayMethodInfo<Card>반환? Card타입이 아닌가?
     type PayMethodType<T extends "card" | "appcard" | "bank"> = T extends
         | "card"
         | "appcard"
         ? Card
         : Bank;
+
+    // 인자값 제한 T extends "card" | "appcard" | "bank"
+    // 위와의 차이점은 제네릭 T로 타입을 제한했기 때문에 인자를 넣고 반환을 받을때 Card 타입인지 Bank타입인지
+    // 명확하다는 뜻 같음
+    // 추가 공부 필요
+    // 제네릭과 extends를 함께 사용해 제네릭으로 받는 타입 제한 개발자는 잘못된 값을 넘길 수 없기 
+    // 떄문에 휴먼 에러 방지
+    // extends를 활용해 조건부 타입 설정 반환 값을 사용자가 우너하는 값으로 구체화 하여 불필요한
+    // 타입 가드, 타입 단언 등을 방지
+    export const useGetRegisteredList = <T extends "card" | "appcard" | "bank">(
+        type: T
+    ): UseQueryResult<PayMethodType<T>[]> => {
+        const url = `beaminpay/codes/${type === "appcard" ? "card" : type}`;
+
+        const fetcher = fetcherFactory<PayMethodType<T>[]> ({
+            onSuccess: (res) => {
+                const usablePocketList = 
+                    res?.filter(
+                        (pocket: PocketInfo<Card> | PcoketInfo<Bank>) =>
+                            pocket?.useType === "USE"
+                    ) ?? [];
+            }
+        });
+
+        const result = useCommonQuery<PayMethodType<T>[]>(url, undefined, fetcher);
+
+        return result;
+    };
 } 
+
+{
+    
+}
