@@ -19,6 +19,17 @@
         | "bottom"
         | "bottomLeft"
         | "bottomRight";
+    
+    //템플릿 리터럴 ㅌ입을 적용하여 명확하게 표현 한다면
+    type Vertical = "top" | "bottom";
+    type Horizon = "left" | "right";
 
+    type Direction = Vertical | `${Vertical}${Capitalize<Horizon>}`;
 
+    // 타입스크립트 컴파일러가 유니온을 추론하는 데 시간이 오래 걸리면 비효율적이기 떄문에
+    // 타입스크립트가 타입을 추론하지 않고 에러를 내뱉을 때가 있다
+    // 따라서 템플릿 리터럴 타입에 삽입된 유니온 조합의 경우의 수가 너무 많지 않게 적절하게 나누어 타입을 정의하는 것이 좋다
+    type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+    type Chunk = `${Digit}${Digit}${Digit}`;
+    type PhoneNumberType = `010-${Chunk}-${Chunk}`;
 }
