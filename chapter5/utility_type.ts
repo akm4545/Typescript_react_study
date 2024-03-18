@@ -165,5 +165,60 @@
         account: string
     };
 
+    type PickOne<T> = {
+        [P in keyof T]: Record<P, T[P]> & Partial<Record<Exclude<keyof T, P> undefined>>;
+    }[keyof T];
+
     type CardOrAccount = PickOne<Card & Account>;
+
+    function withdraw(type: CardOrAccount){
+        //...
+    }
+
+    withdraw({card: "hyundai", account: "hana"}); //에러 발생
+}
+
+{
+    //NonNullable 타입
+    // 타입스크립트에서 제공하는 유틸리티 타입
+    // 제네릭으로 받는 T가 null 또는 undefined 일때 never 또는 T를 반환
+    // null이나 undefined가 아닌 경우를 제외할 수 있다
+    type NonNullable<T> = T extends null | undefined ? never : T;
+
+    // NonNullable 유틸리티 타입을 사용하여 null 또는 undefined를 검사하는 타입 가드 함수
+    // value 가 null 이거나 undefined라면 false 반환 
+    // true 면 is 키워드로 인해 NonNullable<T> 타입으로 바뀐다 (null 이나 undefined가 아닌 타입)
+    function NonNullable<T>(value: T): value is NonNullable<T> {
+        return value !== null && value !== undefined;
+    }
+}
+
+{
+    // Promise.all을 사용할때 NonNullable을 적용한 예시
+    // 여러 상품을 조회할 때 하나의 API에서 에러가 발생한다고 해서 전체 광고가 보이지 않으면 안되니까 try-catch문 사용
+    class AdCampaignAPI {
+        static async operating(shopNo: number): Promise<AdCampaign[]>{
+            try{
+                return await fetch(`/ad/shopNumber=${shopNo}`);
+            }catch(error){
+                return null;
+            }
+        }
+    }
+
+    // Promise.all을 사용해서 shop의 광고를 받아오는 코드
+    const shopList = [
+        {shopNo: 100, category: "chicken"},
+        {shopNo: 101, category: "pizza"},
+        {shopNo: 102, category: "noodle"},
+    ];
+
+    // operating함수에서 null을 반환할 수 있기 때문에 shopAdCampaingList의 타입은 Array<AdCompaign[] | null>로 추론
+    const shopAdCampaingList = await Promise.all(shopList.map((shop) => AdCampaignAPI.operating(shop.shopNo)));
+
+    // shopAdCampaingList변수를 NonNullable 함수로 필터링하지 않으면 순회시마다 콜백 함수에 if문을 사용한 타입 가드를 반복해야 한다
+    // 단순하게 필터링 한다면 [shopAdCampaingList.filter((shop) => !!shop)]가 원하는 Array<AdCampaign[]>타입으로 추론되는 것이 아니라, null이 될 수 있는 상태인 Array<AdCompaign[] | null>로 추론된다
+    // 이럴때 NonNullable을 사용하여 필터링 하면 된다
+
+    const shopAds = shopAdCampaingList.filter(NonNullable); //Array<AdCampaign[]>
 }
