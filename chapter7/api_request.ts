@@ -228,6 +228,11 @@
         }
     }
 
+    // 해당 builder 패턴을 사용한 코드
+    // 보일러플레이트 코드가 많다는 단점을 갖고 있다
+    // 하지만 옵션이 다양한 경우에 인터셉터를 설정값에 따라 적용하고 필요없는 인터셉터를 선택적으로 사용할 수 있다는 장점도 있다
+    // 보일러플레이트 코드 = 어떤 기능을 사용할 때 반복적으로 사용되는 기본적인 코드를 말한다 
+    // 예를 들어 API를 호출하기 위한 기본적인 설정과 인터셉터 등을 설정하는 부분을 보일러플레이트 코드로 간주할 수 있다
     const fetchJobNameList = async (name?: string, size?: number) => {
         const api = APIBuilder.get("/apis/web/jobs")
             .withCredentails(true) // 이제 401 에러가 나는 경우 자동으로 에러를 탐지하는 인터셉터를 사용
@@ -237,4 +242,21 @@
         const {data} = await api.call<Response<JobNameListResponse>>();
         return data;
     };
+}
+
+{
+    // 같은 서버에서 오는 응답의 형태는 대체로 통일되어 있어서 앞서 소개한 API의 응답 값은 하나의 Response 타입으로 묶일 수 있다
+    interface Response<T> {
+        data: T;
+        status: string;
+        serverDateTime: string;
+        errorCode?: string //FAIL, ERROR
+        errorMessage?: string; //FAIL, ERROR
+    }
+
+    const fetchCart = (): AxiosPromise<Response<FetchCartResponse>> => 
+        apiRequester.get<Response<FetchCartResponse>> "cart";
+
+    const postCart = (postCartRequest: PostCartRequest): AxiosPromise<Response<PostCartResponse>> => 
+        apiRequester.post<Response<PostCartResponse>>("cart", postCartRequest);
 }
