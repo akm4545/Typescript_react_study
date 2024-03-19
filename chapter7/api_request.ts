@@ -68,6 +68,7 @@
 }
 
 {
+    // 각각의 requester는 서로 다른 역할을 담당하는 다른 서버이기 때문에 requester별로 다른 헤더를 설정해줘야 할 수도 있다
     import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from "axios";
 
     const getUserToken = () => "";
@@ -83,6 +84,7 @@
         timeout: 5000,
     });
 
+    // 기본 requester 설정
     const setRequestDefaultHeader = (requestConfig: AxiosRequestConfig) => {
         const config = requestConfig;
 
@@ -96,6 +98,7 @@
         return config;
     };
 
+    // 주문 requester 설정
     const setOrderRequestDefaultHeader = (requestConfig: AxiosRequestConfig) => {
         const config = requestConfig;
 
@@ -131,4 +134,107 @@
     });
 
     orderCartApiRequester.interceptors.request.use(setRequestDefaultHeader);
+
+    // 요청 옵션에 따라 다른 인터셉터를 만들기 위해 빌더 패턴을 추가하여 APIBuilder 같은 클래스 형태로 구성하기도 한다
+    // 기본 API 클래스로 실제 호출 부분을 구성 
+    class API {
+        readonly method: HTTPMethod;
+        readonly url: string;
+        baseURL?: string;
+        headers?: HTTPHeaders;
+        params?: HTTPParams;
+        data?: unknown;
+        timeout?: number;
+        withCredentials?: boolean;
+
+        constructor(method: HTTPMethod, url: string){
+            this.method = method;
+            this.url = url;
+        }
+
+        call<T>(): AxiosPromise<T> {
+            const http = axios.create();
+
+            //만약 withCredentail이 설정된 API라면 아래 같이 인터셉터를 추가하고 아니라면 인터셉터를 사용하지 않음
+            if(this.withCredentials){
+                http.interceptors.response.use(
+                    response => response,
+                    error => {
+                        if(error.response && error.response.status == 401){
+                            // 에러 처리 진행
+                        }
+
+                        return Promise.reject(error);
+                    }
+                );
+            }
+
+            return http.request({...this})
+        }
+    }
+
+    //API를 호출하기 위한 래퍼를 빌더 패턴으로 만든다
+    class APIBuilder {
+        private _instance: API;
+
+        constructor(method: HTTPMethod, url: string, data?: unknown){
+            this._instance = new API(method, url);
+            this._instance.baseURL = apiHost;
+            this._instance.data = data;
+            this._instance.headers = {
+                'Content-Type': 'application/json;charset=urf-8',
+            };
+            this._instance.timeout = 5000;
+            this._instance.withCredentials = false;
+        }
+
+        static get = (url: string) => new APIBuilder('GET', url);
+        static put = (url: string, data: unknown) => new APIBuilder('PUT', url, data);
+        static post = (url: string, data: unknown) => new APIBuilder('POST', url, data);
+        static delete = (url: string) => new APIBuilder('DELETE', url);
+
+        baseURL(value: string): APIBuilder{
+            this._instance.baseURL = value;
+            return this;
+        }
+
+        headers(value: HTTPHeaders): APIBuilder {
+            this._instance.headers = value;
+            return this;
+        }
+
+        timeout(value: number): APIBuilder {
+            this._instance.timeout = value;
+            return this;
+        }
+
+        params(value: HTTPParams): APIBuilder {
+            this._instance.params = value;
+            return this;
+        }
+
+        data(value: unknown): APIBuilder {
+            this._instance.data = value;
+            return this;
+        }
+
+        withCredentails(value: boolean): APIBuilder {
+            this._instance.withCredentials = value;
+            return this;
+        }
+
+        build(): API {
+            return this._instance;
+        }
+    }
+
+    const fetchJobNameList = async (name?: string, size?: number) => {
+        const api = APIBuilder.get("/apis/web/jobs")
+            .withCredentails(true) // 이제 401 에러가 나는 경우 자동으로 에러를 탐지하는 인터셉터를 사용
+            .params({name, size}) //body 가 없는 axios 객체도 빌더 패턴으로 쉽게 만든다
+            .build();
+
+        const {data} = await api.call<Response<JobNameListResponse>>();
+        return data;
+    };
 }
