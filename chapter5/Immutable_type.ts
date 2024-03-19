@@ -86,3 +86,69 @@
      }
      */
 }
+
+{
+    //keyof, typeof 연산자를 사용해서 theme 객체 타입을 구체화하고 string으로 타입을 설정했던 Button 컴포넌트 개선
+    import {FC} from "react";
+    import styled from "styled-components";
+
+    const colors = {
+        black: "#000000",
+        gray: "#222222",
+        white: "#FFFFFF",
+        mint: "#2AC1BC",
+    };
+
+    const theme = {
+        colors: {
+            default: colors.gray,
+            ...colors
+        },
+        backgroundColor: {
+            default: colors.white,
+            gray: colors.gray,
+            mint: colors.mint,
+            black: colors.black
+        },
+        fontSize: {
+            default: "16px",
+            small: "14px",
+            large: "18px"
+        },
+    };
+
+    // teme는 type이 아니기 때문에 해당 값을 추출해서 type화 하기 위함
+    // 반대로 쓴거 아닌가?
+    // colors 타입의 키값 추출?
+    type ColorType = typeof keyof theme.colors;
+    type BackgroundColorType = typeof keyof theme.backgroundColor;
+    type FontSizeType = typeof keyof theme.fontSize;
+
+    // 객체의 키값을 추출한 타입을 활용하면 객체에 접근할 때 타입스크립트의 도움을 받아 실수를 방지할 수 있다
+    interface Props {
+        color?: ColorType;
+        backgroundColor?: BackgroundColorType;
+        fontSize?: FontSizeType;
+        onClick: (event: React.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+    }
+
+    const Button: FC<Props> = ({fontSize, backgroundColor, color, children}) => {
+        return (
+            <ButtonWrap
+                fontSize={fontSize}
+                backgroundColor={backgroundColor}
+                color={color}
+            >
+                {children}
+            </ButtonWrap>
+        );
+    };
+
+    const ButtonWrap = styled.button<Omit<Props, "onClick">>`
+        color: ${({color}) => theme.color[color ?? "default"]};
+        background-color: ${({backgroundColor}) =>
+            theme.bgColor[backgroundColor ?? "default"]
+        };
+        font-size: ${({fontSize}) => theme.fontSize[fontSize ?? "default"]};
+    `;
+}
