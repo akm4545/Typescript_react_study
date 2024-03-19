@@ -31,4 +31,46 @@
     foodByCategory["양식"]?.map((food) => console.log(food.name));
 }
 
+{
+    //키가 유한한 집합이라면 유닛 타입(다른 타입으로 쪼개지지 않고 오직 하나의 정확한 값을 가지는 타입)을 사용
 
+    type Category = "한식" | "일식";
+
+    interface Food {
+        name: string;
+        //...
+    }
+
+    const foodByCategory: Record<Category, Food[]> = {
+        한식: [{name: "제육덮밥"}, {name: "뚝배기 불고기"}],
+        일식: [{name: "초밥"}, {name: "텐동"}],
+    };
+
+    // 카테고리로 한식 또는 일식만 올 수 있기 때문에 양식을 키로 사용하면 에럭 ㅏ발생한다
+    // Property '양식' does not exist on type Record<Category, Food[]>;
+    foodByCategory["양식"];
+}
+
+{
+    // 키가 무한한 상황에서는 Partial을 사용하여 해당 값이 undefined일 수 있는 상태임을 표현할 수 있다
+    // 객체 값이 undefined일 수 있는 경우에 Partial을 사용해서 PartialRecord 타입을 선언하고 객체를 선언할 때 이것을 활용할 수 있다
+    // Partial<B>는 B 타입을 옵셔널로 만든다 따라서 {[key]? : undefined}와 같다
+    type PartialRecord<K extends string, T> = Partial<Record<K, T>>;
+    type Category = string;
+
+    interface Food{
+        name: string;
+        //...
+    }
+
+    const foodByCategory: PartialRecord<Category, Food[]> = {
+        한식: [{name: "제육덮밥"}, {name: "뚝배기 불고기"}],
+        일식: [{name: "초밥"}, {name: "텐동"}],
+    };
+
+    // 타입스크립트는 foodByCategory[key]를 Food[] 또는 undefined로 추론하고 개발자에게 이 값은 undefined일 수 있으니 해당 값에 대한 처리가 필요하다고 표시한다
+    // 개발자는 안내를 보고 옵셔널 체이닝을 사용하거나 조건문을 사용하는 등 사전에 조치할 수 있게 되어 예상치 못한 런타임 오류를 줄일 수 있다
+    foodByCategory["양식"]; //Food[] 또는 undefined 타입으로 추론 
+    foodByCategory["양식"].map((food) => console.log(food.name));  // Object is possibly 'indefined'
+    foodByCategory["양식"]?.map((food) => console.log(food.name)); // OK
+}
