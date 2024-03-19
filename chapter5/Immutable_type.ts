@@ -29,6 +29,8 @@
         onClick: (event: React.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
     }
 
+    // Props의 속성들 type이 string 이면 Button컴포넌트의 props로 넘겨줄 때 자동완성되지 않으며 잘못된 키값을 넣어도 에러가 발생하지 않게 된다
+    // 이러한 문제는 theme 객체로 타입을 구체화해서 해결할 수 있다
     const Button: FC<Props> = ({fontSize, backgroundColor, color, children}) => {
         return (
             <ButtonWrap
@@ -48,4 +50,39 @@
         };
         font-size: ${({fontSize}) => theme.fontSize[fontSize ?? "default"]};
     `;
+}
+
+{
+    //타입스크립트에서 keyof 연산자는 객체 타입을 받아 해당 객체의 키값을 string 또는 number의 리터럴 유니온 타입 반환
+    // 객체 타입으로 인덱스 시그니처가 사용되었다면 keyof는 인덱스 시그니처의 키 타입을 반환
+
+    interface ColorType{
+        red: string;
+        green: string;
+        blue: string;
+    }
+
+    type ColorKeyType = keyof ColorType; //'red' | 'green' | 'blue'
+}
+
+{
+    //keyof 연산자는 객체 타입을 받는다 따라서 객체의 키값을 타입으로 다루려면 값 객체를 타입으로 변환해야 한다
+    // 이때 타입스크립트의 typeof 연산자를 활용할 수 있다
+    // 자바스크립트 typeof = 타입 추출 / 타입스크립트 typeof = 변수 혹은 속성의 타입을 추론
+    // 타입스크립트의 typeof 연산자는 단독으로 사용되기보다 주로 ReturnType 같이 유틸리티 타입이나 keyof 연산자같이 타입을 받는 연산자와 함께 쓰인다
+    
+    const colors = {
+        red: "#F45452",
+        green: "#0C952A",
+        blue: "#1A7CFF"
+    };
+
+    type ColorType = typeof colors;
+    /**
+     {
+        red: string;
+        green: string;
+        blue: string;
+     }
+     */
 }
