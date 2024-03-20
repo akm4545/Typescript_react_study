@@ -33,3 +33,24 @@
         }
     }
 }
+
+{
+    // 서브클래싱
+    // 기존 클래스를 확장하여 새로운 클래스를 만드는 과정
+
+    // 다양한 에러에 대응하기 위한 에러 서브클래싱
+
+    // 사용자 주문 내역 요청 코드
+    const getOrderHistory = async (page: number): Promise<History> => {
+        try{
+            const {data} = await axios.get(`https://some.site?page=${page}`);
+            const history = await JSON.parse(data);
+
+            return history;
+        }catch(error){
+            alert(error.message);
+        }
+    };
+
+    
+}
