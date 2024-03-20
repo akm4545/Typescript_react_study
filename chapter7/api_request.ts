@@ -395,3 +395,114 @@
     // getter등의 함수를 추가하여 실제 어떤 값이 뷰 모델에 추가한 값인지 알기 쉽게 하기 등의 방법을 사용
 }
 
+{
+    // Superstruct 
+    // Superstruct를 사용하여 인터페이스 정의와 자바스크립트 데이터의 유효성 검사를 쉽게 할 수 있다
+    // Superstruct는 런타임에서의 데이터 유효성 검사를 통해 개발자와 사용자에게 자세한 런타임 에러를 보여주기 위해 고안되었다
+
+    // Superstruct 사용 예시
+    import {assert, is, validate, object, number, string, array} from "superstruct";
+
+    // Article = superstruct의 object()모듈의 반환 결과
+    // 아래와 같은 데이터 명세를 가진 스키마
+    const Article = object({
+        id: number(),
+        title: string(),
+        tages: array(string()),
+        author: object({
+            id: number()
+        }),
+    });
+
+    // 데이터를 담은 object
+    const data = {
+        id: 34,
+        title: "Hello World",
+        tags: ["news", "features"],
+        author: {
+            id: 1,
+        },
+    };
+
+    // 유효하지 않을 경우 에러
+    assert(data, Article);
+    // 검사 결과에 따라 boolean 값 리턴
+    is(data, Article);
+    // [error, data] 형식의 튜플 반환
+    // 유효하지 않을 시 에러 값 반환
+    // 유효하면 첫번째 요소로 undefined 두번째 요초소 data value 반환
+    validate(data, Article);
+
+    // Infer를 사용하여 기존 타입 선언 방식과 동일하게 타입을 선언할 수 있다
+    import {Infer, number, object, string} from "superstruct";
+
+    const User = object({
+        id: number(),
+        email: string(),
+        name: string(),
+    });
+
+    type User = Infer<typeof User>;
+
+    // user가 User타입과 매칭되는지 확인하는 isUser 함수
+    type User = {
+        id: number;
+        email: string;
+        name: string;
+    };
+
+    import {assert} from 'superstruct';
+
+    function isUser(user: User){
+        assert(user, User);
+        console.log("적절한 유저입니다.")
+    }
+
+    const user_A = {
+        id: 4,
+        email: "test@woowahan.email",
+        name: "woowa",
+    };
+    
+    // 타입이 호환되므로 적절한 유저라는 메세지가 나옴
+    isUser(user_A);
+
+    const user_B = {
+        id: 5,
+        email: "wrong@woowahan.email",
+        name: 4
+    };
+
+    // 런타임 에러 발생
+    // 컴파일 단계가 아닌 런타임에서도 적절한 데이터인지 체크할때 사용
+    isUser(user_B);
+}
+
+{
+    interface ListItem{
+        id: string;
+        content: string;
+    }
+
+    interface ListResponse{
+        items: ListItem[];
+    }
+
+    // 호출 시 명시한 타입대로 응답이 올 거라고 생각하지만 실제 서버 응답 형식은 다를 수 있다
+    // 타입스크립트는 컴파일타임에 타입을 검증하므로 실제 서버 응답의 형식을 검증할 수 없다
+    const fetchList = async(filter?: ListFetchFilter): Promise<ListResponse> => {
+        const {data} = await api
+            .params({...filter})
+            .get("/apis/get-list-summaries")
+            .call(Response<ListResponse)>>();
+
+        return {data};
+    }
+
+    // 타입 검증 코드
+    import {assert} from "superstruct";
+
+    function isListItem(listItems: ListItem[]){
+        listItems.forEach((listItem) => assert(listItem, ListItem));
+    }
+}
