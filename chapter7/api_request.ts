@@ -259,4 +259,32 @@
 
     const postCart = (postCartRequest: PostCartRequest): AxiosPromise<Response<PostCartResponse>> => 
         apiRequester.post<Response<PostCartResponse>>("cart", postCartRequest);
+    
+    // Response 타입을 apiRequester내에서 처리하고 싶은 생각이 들 수 있는데 
+    // 이렇게 되면 update나 create 같이 응답이 없는 API를 처리하기 까다로워진다
+    // 따라서 Response 타입은 apiRequester가 모르게 관리되어야 한다
+    const updateCart = (updateCartRequest): AxiosPromise<Response<FetchCartResponse>> => 
+        apiRequester.get("cart");
+
+    // 어떤 응답이 들어있는지 알 수 없거나 값의 형식이 달라지더라도 로직에 영향을 주지 않는 경우에는 unknown 타입을 사용하여 알 수 없는
+    // 값임을 표현한다
+    interface response {
+        data: {
+            cartItems: CartItem[];
+            // 만약 forPass 안에 프론트 로직에서 사용해야 하는 값이 있다면 어떤 값이 들어올지 모르는 상태이기 때문에 unkonw을 유지한다
+            // 로그를 위해 단순히 받아서 넘겨주는 값의 타입은 언제든지 변경될 수 있으므로 forPass 내의 값은 사용하지 않아야 한다
+            forPass: unknown;
+        }
+    }
+
+    // 다만 이미 설계된 프로덕트에서 쓰고 있는 값이라면 프론트 로직에서 써야 하는 값에 대해서만 타입을 선언한 다음에 사용하는게 좋다
+    type ForPass = {
+        type: "A" | "B" | "C";
+    };
+
+    const isTargetValue = () => (data.forPass as ForPass).type === "A";
+}
+
+{
+    
 }
