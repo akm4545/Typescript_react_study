@@ -286,5 +286,112 @@
 }
 
 {
-    
+    // API 응답은 변할 가능성이 크다 특히 새로운 프로젝트는 서버 스펙이 자주 바뀌기 때문에 뷰모델을 사용하여 API 변경에 따른 범위를 한정해줘야 한다
+
+    // 특정 객체 리스트를 조회하여 리스트 각각의 내용과 리스트 전체 길이 등을 보여줘야 하는 화면 코드
+    interface ListResponse{
+        items: ListItem[];
+    }
+
+    const fetchList = async (filter?: ListFetchFilter): Promise<ListResponse> => {
+        const {data} = await api
+            .params({...filter})
+            .get("/apis/get-list-summaries")
+            .call<Response<ListResponse>>();
+
+        return {data};
+    };
+
+    // 해당 api를 사용하는 코드 컴포넌트 내부에서 비동기 함수를 호출하고 then으로 처리하지만 실제 비도기 함수는 컴포넌트 내부에서 직접 호출되지 않음
+    const ListPage: React.FC = () => {
+        const [totalItemCount, setTotalItemCount] = useState(0);
+        const [items, setItems] = useState<ListItem[]>([]);
+
+        useEffect(() => {
+            fetchList(filter).then(({items}) => {
+                setCartCount(items.length);
+                setItems(items);
+            });
+        }, [])
+
+        return (
+            <div>
+                <Chip label={totalItemCount}/>
+                <Table items={items}>
+            </div>
+        );
+    };
+
+    // 좋은 컴포넌트는 변경될 이유가 하나뿐인 컴포넌트
+    // api응답의 items 인자를 좀 더 정확한 개념으로 나타내기 위해 jobItems나 cartItems 같은 이름으로 수정되면 해당 컴포넌트도 수정되어야 함
+
+    // 기존 ListResponse에 더 자세한 의미를 담기 위한 변화
+    interface JobListItemResponse{
+        name: string;
+    }
+
+    interface JobListResponse{
+        jobItems: JobListItemResponse[];
+    }
+
+    // 뷰모델로 응답값 통일
+    class JobList {
+        readonly totalItemCount: number;
+        readonly items: JobListItemResponse[];
+
+        constructor({jobItems}: JobListResponse){
+            this.totalItemCount = jobItems.length;
+            this.items = jobItems;
+        }
+    }
+
+    const fetchJobList = async(filter?: ListFetchFilter): Promise<JobListResponse> => {
+        const {data} = await api
+            .params({...filter})
+            .get("/apis/get-list-summaries")
+            .call<Response<JobListResponse>>();
+
+        return new JobList(data);
+    };
+
+    // 뷰모델을 만들면 API 응답이 바뀌어도 UI가 꺠지지 않게 개발할 수 있다
+    // API에 없는 totalItemCount 같은 도메인 개념을 넣을 때 로직을 추가할 필요 없이 간편하게 새로운 필드를 뷰 모데렝 추가할 수 있다
+    // 하지만 추상화 레이어 추가는 결국 코드를 복잡하게 만들고 관리 개발 비용도 늘어난다
+
+    // JobListItemResponse 타입은 서버에서 지정한 응답 형식이기 때문에 이를 UI에서 사용하려면 더 많은 타입이 필요하다
+    interface JobListResponse{
+        jobItems: JobListItemResponse[];
+    }
+
+    // 목록을 뷰모델로 만들어 추상화 뿐만 아니라 각각의 데이터도 뷰모델로 만들어 UI에서 사용하기 위해 추가
+    class JobListItme {
+        constructor(item: JobListItemResponse) {
+            // JobListItemResponse 에서 JobListItem 객체로 변환하는 코드
+        }
+    }
+
+    class JobList {
+        readonly totalItemCount: number;
+        readonly items: JobListItemResponse[];
+
+        constructor({jobItems}: JobListResponse){
+            this.totalItemCount = jobItems.length;
+            this.items = jobItems.map((item) => new JobListItem(item));
+        }
+    }
+
+    const fetchJobList = async(filter?: ListFetchFilter): Promise<JobListResponse> => {
+        const {data} = await api
+            .params({...filter})
+            .get("/apis/get-list-summaries")
+            .call<Response<JobListResponse>>();
+
+        return new JobList(data);
+    };
+
+    // 단순 API20개가 추가되면 20개의 응답이 추가 (뷰모델)
+    // 앞 코드의 totalItemCount같이 API 응답에는 없는 새로운 필드를 만들어 사용할때 서버와 클라이언트의 도메인이 다르면 의사소통 문제가 생길 수 있음
+    // 뷰 모델은 꼭 필요한 곳만 사용하고 백엔드와 프론트 개발자가 충분히 소통하여 API 응답 변화를 최대한 줄여야 한다
+    // getter등의 함수를 추가하여 실제 어떤 값이 뷰 모델에 추가한 값인지 알기 쉽게 하기 등의 방법을 사용
 }
+
