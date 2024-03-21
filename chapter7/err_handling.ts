@@ -176,3 +176,59 @@
         (response: AxiosResponse) => response, httpErrorHandler
     )
 }
+
+{
+    // 에러 바운더리를 활용한 에러 처리
+    // 에러 바운더리는 리액트 컴포넌트 트리에서 에러가 발생할 때 공통으로 에러를 처리하는 리액트 컴포넌트이다
+    // 리액트 컴포넌트 트리 하위에 있는 컴포넌트에서 발생한 에러를 캐치하고 부모 에러 바운더리에서 처리할 수 있다
+    // 에러 발생 컴포넌트에 대신에 에러 처리를 하거나 예상치 못한 에러를 공통 처리할 때 사용할 수 있다
+    import React, {ErrorInfo} from 'react';
+    import ErrorPage from "pages/ErrorPage";
+
+    interface ErrorBoundaryProps{}
+
+    interface ErrorBoundaryState {
+        hasError: boolean;
+    }
+
+    class ErrorBoundary extends React.Component<
+        ErrorBoundaryProps,
+        ErrorBoundaryState
+    >{
+        constructor(props: ErrorBoundaryProps){
+            super(props);
+            this.state = {hasError: false};
+        }
+
+        static getDerivedStateFromError(): ErrorBoundaryState{
+            return {hasError: true};
+        }
+    
+        componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+            this.setState({hasError: true});
+            console.error(error, errorInfo);
+        }
+
+        render(): React.ReactNode {
+            const {children} = this.props;
+            const {hasError} = this.state;
+
+            return hasError ? <ErrorPage /> : children;
+        }
+    }
+
+    const App = () => {
+        return (
+            <ErrorBoundary>
+                <OrderHistoryPage />
+            </ErrorBoundary>
+        );        
+    };
+
+    // 이처럼 작성하면 OrderHistoryPage 컴포너트 내에서 처리되지 않은 에러가 있을 때 에러 바운더리에서 에러 페이지 노출
+    // 이외에도 에러 바운더리에 로그를 보내는 코드를 추가하여 예상치 못한 에러의 발생 여부를 추적할 수 있게 된다
+}
+
+{
+    // Reduxt의 에러 처리 방법
+}
