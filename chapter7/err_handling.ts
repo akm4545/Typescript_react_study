@@ -230,5 +230,129 @@
 }
 
 {
-    // Reduxt의 에러 처리 방법
+    // Redux의 에러 처리 방법
+
+    // API 호출에 관한 api call reducer
+    const apiCallSlice = createSlice({
+        name: "apiCall",
+        initialState,
+        reducers: {
+            setApiCall: (state, {pauload: {status, urlInfo}}) => {
+                // API State를 채우는 logic
+            },
+            setApiCallError: (state, {payload}: PayloadAction<any>) => {
+                state.error = payload;
+            },
+        },
+    });
+
+    const API = axios.create();
+
+    const setAxiosInterceptor = (store: EnhancedStore) => {
+        // 중복 코드 생략
+
+        // onSuccess시 처리를 인터셉터로 처리
+        // 에러 상태를 관리하지 않고 처리할 수 있으면 바로 처리하고 그렇지 않다면 reject로 넘김
+        // setApiCallError를 사용 에러를 상태로 처리
+        API.interceptors.response.use(
+            (response: AxiosResponse) => {
+                const {method, url} = response.config;
+
+                store.dsipatch(
+                    setApiCall({
+                        status: ApiCallStatus.None,
+                        urlInfo: {url, method},
+                    })
+                );
+
+                return response?.data?.data || response?.data
+            },
+            (error: AxiosError) => {
+                if(error.response?.status === 401){
+                    window.location.href = error.response.headers.location;
+                    return;
+                }else if(error.response?.status === 403){
+                    window.location.href = error.response.headers.location;
+                    return;
+                }else{
+                    message.error(`[서버 요청 에러]: ${error?.response?.data?.message}`);
+                }
+
+                const {
+                    config: {url, method},
+                } = error;
+
+                store.dispatch(
+                    setApiCall({
+                        status: ApiCallStatus.None,
+                        urlInfo: {url, method},
+                    })
+                );
+
+                return Promise.reject(error);
+            }
+        );
+    };
+
+    const fetchMenu = createAsyncThunk(
+        FETCH_MENU_REQUEST,
+        async({shopId, menuId}: FetchMenu) => {
+            try{
+                const data = await apiCallSlice.fetchMenu(shopId, menuId);
+                return data;
+            }catch(error){
+                setApiCallError({error});
+            }
+        }
+    );
+}
+
+{
+    // MobX 사용시 에러 핸들링 
+    // 외부에서는 별도로 성공, 실패 등에 대해 참조하지 않으며 비동기 동작의 수행 및 결괏값을 사용
+    class JobStore {
+        jobs: Job[] = [];
+        state: LoadingState = "PENDING"; // "PENDING" | "DONE" | "ERROR";
+        errorMsg = "";
+
+        constructor() {
+            makeAutObservable(this);
+        }
+
+        async fetchJobList(){
+            this.jobs = [];
+            this.state = "PENDING";
+            this.errorMsg = "";
+
+            try{
+                const projects = await fetchJobList();
+
+                runInAction(() => {
+                    this.projects = projects;
+                    this.state = "DONE";
+                });
+            }catch(e){
+                runInAction(() => {
+                    // 에러 핸들링 코드 작성
+                    this.state = "ERROR";
+                    this.errorMsg = e.message;
+                    showAlert();
+                });
+            }
+        }
+
+        get isLoading(): boolean {
+            return state === "PENDING";
+        }
+    }
+
+    const JobList = (): JSX.Element => {
+        const [jobStore] = useState(() => new JobStore());
+
+        if(job.isLoading){
+            return <Loader />;
+        }
+
+        return <>{jobStore.jobs.map((job) => <Item job={job} />)}</>;
+    };
 }
