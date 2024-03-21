@@ -52,5 +52,71 @@
         }
     };
 
-    
+    // 해당 코드는 에러 메세지를 얼럿을 사용하여 사용자에게 표시
+    // 사용자는 어떤 에러인가 발생한 것인지 판단 가능
+    // 개발자는 로그인 정보가 만료인지 타임아웃이 발생한 것인지 데이터를 잘못 전달한 것인지 구분 불가능
+    // 이때 서브클래싱을 활용하면 에러가 발생했을 때 코드상에서 어떤 에러인지를 바로 확인할 수 있다
+    // 에러 인스턴스가 무엇인지에 따라 에러 처리 방식을 다르게 구현할 수 있다
+
+    // 에러 객체를 상속한 에러 클래스들
+    class OrderHttpError extends Error{
+        private readonly privateResponse: AxiosResponse<ErrorResponse> | undefined;
+
+        constructor(message?: string, response?: AxiosResponse<ErrorResponse>){
+            super(message);
+            this.name = "OrderHttpError";
+            this.privateResponse = response;
+        }
+
+        get response(): AxiosResponse<ErrorResponse> | undefined {
+            return this.privateResponse;
+        }
+    }
+
+    class NetworkError extends Error {
+        constructor(message = ""){
+            super(message);
+            this.name = "NetworkError";
+        }
+    }
+
+    class UnauthorizedError extends Error{
+        constructor(message: string, response?: AxiosResponse<ErrorResponse>){
+            super(message, response);
+            this.name = "UnauthorizedError";
+        }
+    }
+
+    // 조건에 따라 인터셉터에서 적합한 에러 객체 전달
+    const httpErrorHandler = (
+        error: AxiosError<ErrorResponse> | Error
+    ): Promise<Error> => {
+        let promiseError: Promise<Error>;
+
+        if(axios.isAxiosError(error)){
+            if(Object.is(error.code, "ECONNABORTED")){
+                promiseError = Promise.reject(new TimeoutError());
+            }else if(Object.is(error.message, "Network Error")){
+                promiseError = Pormise.reject(new NetworkError(""));
+            }else{
+                const {response} = error as AxiosError<ErrorResponse>;
+
+                switch(response?.status){
+                    case HttpStatusCode.UNAUTHORIZED:
+                        promiseError = Promise.reject(
+                            new UnauthorizedError(response?.data.message, response)
+                        );
+                        break;
+                    default:
+                        promiseError = Promise.reject(
+                            new OrderHttpError(response?.data.message, response)
+                        );
+                }
+            }
+        }else{
+            promiseError = Promise.reject(error);
+        }
+
+        return promiseError;
+    };
 }
