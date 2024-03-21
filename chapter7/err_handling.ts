@@ -88,6 +88,7 @@
     }
 
     // 조건에 따라 인터셉터에서 적합한 에러 객체 전달
+    // 에러에 따라 적절한 에러 객체로 변환하여 반환
     const httpErrorHandler = (
         error: AxiosError<ErrorResponse> | Error
     ): Promise<Error> => {
@@ -119,4 +120,59 @@
 
         return promiseError;
     };
+
+    // 에러 처리 방식을 개선한 요청 코드 
+    // 타입 가드문을 통해서 코드상에서 에러 핸들링에 대한 부분을 한눈에 볼 수 있다
+    const onActionError = (
+        error: unknown,
+        params?: Omit<AlertPopup, "type" | "message">
+    ) => {
+        if(error instanceof UnauthorizedError){
+            onUnauthorizedError(
+                error.message,
+                errorCallback?.onUnauthorizedErrorCallback
+            );
+        }else if(error instanceof NetworkError){
+            alert("네트워크 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요". {
+                onClose: errorCallback?.onNetworkErrorCallback,
+            });
+        }else if(error instanceof OrderHttpError){
+            alert(error.message, params);
+        }else if(error instanceof Error){
+            alert(error.message, params);
+        }else{
+            alert(defaultHttpErrorMessage, params);
+        }
+    };
+
+    const getOrderHistory = aync(page: number): Promise<History> => {
+        try{
+            const {data} = await fetchOrderHistory({page});
+            const history = await JSON.parse(data);
+
+            return history;
+        }catch(error){
+            onActionError(error);
+        }
+    };
+}
+
+{
+    // 인터셉터를 활용한 에러 처리
+    const httpErrorHandler = (
+        error: AxiosError<ErrorResponse> | Error
+    ): Promise<Error> => {
+        (error) => {
+            //401에러인 경우 로그인 페이지로 이동
+            if(error.response && error.response.status === 401){
+                window.location.href = `${backOfficeAuthHost}/login?targetUrl=${window.location.href}`;
+            }
+
+            return Promise.reject(error);
+        };
+    };
+
+    orderApiRequester.interceptors.response.use(
+        (response: AxiosResponse) => response, httpErrorHandler
+    )
 }
