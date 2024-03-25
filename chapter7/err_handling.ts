@@ -356,3 +356,80 @@
         return <>{jobStore.jobs.map((job) => <Item job={job} />)}</>;
     };
 }
+
+{
+    // react-query를 이용한 에러 처리
+    const JobComponent: React.FC = () => {
+        const {isError, error, isLoading, data} = useFetchJobList();
+
+        if(isError){
+            return <div>{`${error.message}가 발생했습니다. 나중에 다시 시도해주세요.`}</div>;
+        }
+
+        if(isLoading){
+            return <div>로딩 중입니다.</div>
+        }
+
+        return <>{data.map((job) => <JobItem key={job.id} job={job} />)}</>;
+    };
+}
+
+{
+    // 200번 응답이더라도 커스텀 에러의 경우 성공, 실패를 판별해야 한다
+    // 예시
+    // httpStatus: 200
+    // {
+    //   "status": "C2005", (성공인 경우 "SUCCESS"를 응답)
+    //   "message": "장바구니에 품절된 메뉴가 있습니다."
+    // }
+
+    // 해당 에러를 처리하기 위해 요청 함수 내에서 조건문으로 status 비교
+    // 해당 방식은 API가 많을 때는 매번 if(response.status === "SUCCESS") 구문을 추가해야 한다
+    const successHandler = (response: CreateOrderResponse) => {
+        if(response.status === "SUCCESS"){
+            // 성공 시 로직
+            return;
+        }
+        throw new CustomError(response.status, response.message);
+    };
+
+    const createOrder = (data: CreateOrderData) => {
+        try{
+            const response = apiRequester.post("https://...", data);
+
+            successHandler(response);
+        }catch(error){
+            errorHandler(error);
+        }
+    };
+
+    // 일괄적으로 에러로 처리하고 싶다면 Axios등의 라이브러리 기능 활용
+    // 특정 호스트에 대한 API requester를 별도로 선언하고 상태 코드 비교 로직을 인터셉터에 추가
+    export const apiRequester: AxiosInstance = axios.create({
+        baseURL: orderApiBaseUrl,
+        ...defaultConfig,
+    });
+
+    export const httpSuccessHandler = (response: AxiosResponse) => {
+        if(response.data.status !== "SUCCESS"){
+            throw new CustomError(response?.data.message, response);
+        }
+
+        return response;
+    };
+
+    apiRequester.interceptors.response.use(httpSuccess)
+
+    const createOrder = (data: CreateOrder) => {
+        try{
+            const response = apiRequester.post("https://...", data);
+
+            successHandler(response);
+        }catch(error){
+            // status가 SUCCESS가 아닌 경우 에러로 전달
+            errorHandler(error);
+        }
+    }
+
+    // 인터셉터에서 커스텀 에러를 판단하고 에러를 던짐으로써 외부에서 200번 대로 온 응답이라도 400,500 번대 같은 에러로 받게 된다
+}
