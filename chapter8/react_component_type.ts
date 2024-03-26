@@ -68,6 +68,120 @@
 }
 
 {
+    // Children props 타입 지정
+    // 가장 보편적인 children 타입 (ReactNode | undefined)
+    // ReactNode = ReactElement 외에도 boolean, number 등 여러 타입을 포함하고 있으므로 구체적 타이핑하는 용도에는 적합하지 않음
+    type PropsWithChildren<P> = P & {children?: ReactNode | undefined};
+
+    // 특정 문자열만 허용하고 싶을 때는 children에 대해 추가로 타이핑해줘야 한다
     
+    //example 1
+    type WelcomeProps = {
+        children: "천생연분" | "더 귀한 분" | "귀한 분" | "고마운 분";
+    };
+
+    //example 2
+    type WelcomeProps = {
+        children: string;
+    };
+
+    //example 3
+    type WelcomeProps = {
+        children: ReactElement;
+    };
 }
+
+{
+    // render 메서드와 함수 컴포넌트의 반환 타입 - React.ReactElement, JSX.Element, React.ReactNode
+
+    // 함수 컴포넌트 반환 타입 ReactElement 정의
+    interface ReactElement<P = any,
+        T extends string | JSXElementConstructor<any> = 
+        | string
+        | JSXElementConstructor<any>
+    > {
+        type: T;
+        props: P;
+        key: Key | null;
+    }
+
+    // React.createElement를 호출하는 형태의 구문으로 변환하면 React.createElement의 반환 타입은 ReactElement
+    // 가상 DOM의 엘리먼트는 ReactElement 형태로 저장
+    // 즉 ReactElement 타입은 리액트 컴포넌트를 객체 형태로 저장하기 위한 포맷
+
+    // 글로벌 네임스페이스 = 전역 스코프에서 선언된 변수나 함수 등은 글로벌 네임스페이스에 속하며 
+    // 어떤 파일이든지 해당 스코프에서 선언된 식별자는 모든 곳에서 접근 할 수 있다
+    declare global {
+        namespace JSX{
+            interface Element extends React.ReactElement<any, any> {}
+        }
+    }
+
+    // 함수 컴포넌트에서 JSX.Element 타입은 ReactElement를 확장하고 있는 타입이며 
+    // 글로벌 네임스페이스에 정의되어 있어 외부 라이브러리에서 컴포넌트 타입을 재정의 할 수 있는 유연성을 제공한다
+    // 이러한 특성으로 인해 컴포넌트 타입을 재정의하거나 변경하는 것이 용이해진다 
+
+    // React.Node 타입 정의
+    type ReactText = string | number;
+    type ReactChild = ReactElement | ReactText;
+    type ReactFragment = {} | Iterable<ReactNode>;
+
+    type ReactNode = 
+        | ReactChild
+        | ReactFragment
+        | ReactPortal
+        | boolean
+        | null
+        | undefined;
+
+    // 단순히 ReactElement 외에도 boolean, stirng, number 등의 여러 타입을 포함하고 있다
+    // 포함 관계
+    // JSX.Element < ReactElement < ReactNode
+}
+
+{
+    // ReactElement, ReactNode, JSX.Element = 리액트의 요소를 나타내는 타입
+
+    // @types/react 패키지에 정의된 타입을 살펴보면 아래와 같다
+    declare namespace React{
+        // ReactElement
+        interface ReactElement<
+            P = any,
+            T extends string | JSXElementConstructor<any> =
+                | string
+                | JSXElementConstructor<any>
+        >{
+            type: T;
+            props: P;
+            key: Key | null;
+        }
+    }
+
+    //ReactNode
+    type ReactText = string | number;
+    type ReactChild = ReactElement | ReactText;
+    type ReactFragment = {} | Iterable<ReactNode>;
+
+    type ReactNode = 
+        | ReactChild
+        | ReactFragment
+        | ReactPortal
+        | boolean
+        | null
+        | undefined;
+
+    type ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P>;
+
+    //JSX.Element
+    declare global {
+        namespace JSX {
+            interface Element extends React.ReactElement<any, any> {
+                //...
+            }
+            ..///
+        }        
+    }
+}
+
+
 
