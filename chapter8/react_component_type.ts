@@ -183,5 +183,36 @@
     }
 }
 
+{
+    // JSX = createElement 메서드를 호출하기 위한 문법
+    // 트랜스파일러가 JSX 문법을 createElement 메서드 호출문으로 변환하여 아래와 같이 리액트 엘리먼트를 생성
+    const element = React.createElement(
+        "h1",
+        {className: "greeting"},
+        "Hello, world!"
+    );
+
+    // 주의: 다음 구조는 단순화되었다
+    const element = {
+        type: "h1",
+        props: {
+            className: "greeting",
+            children: "Hello, world!",
+        },
+    };
+
+    declare global {
+        namespace JSX {
+            interface Element extends React.ReactElement<any, any> {
+                //...
+            }
+            //...
+        }
+    }
+
+    // 리액트는 이런식으로 리액트 엘리먼트 객체를 읽어서 DOM을 구성
+    // ReactElement 타입은 JSX의 createElement 메서드 호출로 생성된 리액트 엘리먼트를 나타내는 타입이라고 볼 수 있다
+}
+
 
 
