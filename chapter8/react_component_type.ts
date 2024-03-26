@@ -340,5 +340,65 @@
     };
 }
 
+{
+    // 컴포넌트의 props로서 HTML 태그 속성을 확장하고 싶을 때의 상황
+    // HTML button 태그와 동일한 역할을 하지만 커스텀한 UI를 적용하여 재사용성을 높이기 위한 Button 컴포넌트
+    const Button = () => {
+        return <button>버튼</button>;
+    };
+
+    // 먼저 HTML button 태그를 대체하는 역할이므로 아래와 같이 기존 button 태그의 HTML 속성을 props로 받을 수 있도록 지원
+    type NativeButtonProps = React.DetailedHTMLProps<
+        React.ButtonHTMLAttribures<HTMLButtonElement>,
+        HTMLButtonElement
+    >;
+
+    // HTMLButtonElement의 속성을 모두 props로 받아 button 태그에 전달했으므로 문제없어 보인다
+    const Button = (props: NativeButtonProps) => {
+        return <button {...props}>버튼</button>;
+    };
+
+    // ref를 props로 받을 경우 고려해야 할 사항이 있다
+    // ref = 생성된 DOM 노드나 리액트 엘리먼트에 접근하는 방법 
+    // 아래와 같이 사용
+    
+    // 클래스 컴포넌트
+    class Button extends React.Component {
+        constructor(props){
+            super(props);
+            this.buttonRef = React.createRef();
+        }
+
+        render(){
+            return <button ref={this.buttonRef}>버튼</button>;
+        }
+    }
+
+    // 함수 컴포넌트
+    function Button(props){
+        const buttonRef = useRef(null);
+
+        return <button ref={buttonRef}>버튼</button>;
+    }
+
+    type NativeButtonProps = React.DetailedHTMLProps<
+        React.ButtonHTMLAttributes<HTMLButtonElement>,
+        HTMLButtonElement
+    >;
+
+    // 클래스 컴포넌트
+    class Button extends React.Component {
+        constructor(ref: NativeButtonProps["ref"]){
+            this.buttonRef = ref;
+        }
+
+        render(){
+            return <button ref={this.buttonRef}>버튼</button>;
+        }
+    }
+
+    //함수 컴포넌트
+}
+
 
 
