@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+    },
+    "files": [ // 파일 확장자까지 정확히 작성해줘야 한다
+        "./*",
+    ]
+}
