@@ -398,6 +398,84 @@
     }
 
     //함수 컴포넌트
+    function Button(ref: NativeButtonProps["ref"]){
+        const buttonRef = useRef(null);
+
+        return <button ref={buttonRef}>버튼</button>;
+    }
+
+    // 클래스형 컴포넌트와 함수 컴포넌트에서 ref를 props로 받아 전달하는 방식에 차이가 있다
+
+    // 클래스 컴포넌트로 만들어진 Button 컴포넌트를 사용할 때
+    // 컴포넌트 props로 전달된 ref가 Button 컴포넌트의 button 태그를 그대로 바라보게 된다
+    class WrappedButton extends React.Component{
+        constructor(){
+            this.buttonRef = React.createRef();
+        }
+
+        render(){
+            return(
+                <div>
+                    <Button ref={this.buttonRef} />
+                </div>
+            );
+        }
+    }
+
+    // 함수 컴포넌트로 만들어진 Button 컴포넌트를 사용할 때
+    // 함수 컴포넌트의 경우 전달받은 ref가 Button 컴포넌트의 button 태그를 바라보지 않는다
+    const WrappedButton = () => {
+        const buttonRef = useRef();
+
+        return (
+            <div>
+                <Button ref={buttonRef} />
+            </div>
+        );
+    };
+
+    // 클래스 컴포넌트에서 ref 객체는 마운트된 컴포넌트의 인스턴스를 current 속성값으로 가지지만 
+    // 함수 컴포넌트에서는 생성된 인스턴스가 없기 때문에 ref에 값이 할당되지 않는다
+
+    // 함수 컴포넌트에서도 ref를 전달받을 수 있도록 도롸주는 React.forwardRef 메서드
+    // forwardRef를 사용해 ref를 전달받을 수 있도록 구현
+    const Button = forwardRef((props, ref) => {
+        return <button ref={ref} {...props}>버튼</button>
+    });
+
+    // buttonRef가 Button 컴포넌트의 button 태그를 바라볼 수 있다
+    const WrappedButton = () => {
+        const buttonRef = useRef();
+
+        return (
+            <div>
+                <Button ref={buttonRef} />
+            </div>
+        );
+    };
+
+    // forwardRef는 2개의 제네릭 인자를 받을 수 있다
+    // 첫번째는 ref에 대한 타입 정보
+    // 두번째는 props에 대한 타입 정보
+
+    // Button 컴포넌트에 대한 forwardRef의 타입 선언
+    type NativeButtonType = React.ComponentPropsWithoutRef<"button">;
+    
+    // forwardRef의 제네릭 인자를 통해 ref에 대한 타입으로 HTMLButtonElement를 props에 대한 타입으로 NativeButtonType을 정의했다
+    const Button = forwardRef<HTMLButtonElement, NativeButtonType>((props, ref) => {
+        return (
+            <button ref={ref} {...props}>
+                버튼
+            </button>
+        );
+    });
+
+    // Button 컴포넌트의 props에 대한 타입인 NativeButtonType을 정의할 때 ComponentPropsWithoutRef 타입을 사용
+    // 이렇게 타입을 React.ComponentPropsWithoutRef<"button">로 작성하면 button 태그에 대한 HTML 속성을 모두 포함 ref 속성은 제외
+    // 이러한 특징 때문에 DetailedHTMLProps, HTMLProps, ComponentPropsWithRef와 같이 ref 속성을 포함하는 타입과는 다르다
+    // 함수 컴포넌트의 props로 DetailedHTMLProps와 같이 ref를 포함하는 타입을 사용하게 되면 실제로는 동작하지 않는 ref를 받도록 타입이 지정되 
+    // 에러가 발생할 수 있다
+    // 따라서 HTML 속성을 확장하는 props를 설계할 때는 ComponentPropsWithoutRef 타입을 사용하여 ref가 실제로 forwardRef와 함께 사용될 때만 props로 전달되도록 타입을 저의하는것이 안전
 }
 
 
