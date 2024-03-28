@@ -61,4 +61,76 @@
 
     const Select = ({options, selectedOption, onChange}: SelectProps): JSX.Element => 
     //...
+
+    interface Fruit {
+        count: number;
+    }
+
+    interface Param {
+        [key: string]: Fruit; // type Param = Record<string, Fruit>과 동일
+    }
+
+    const func: (fruits: Param) => void = ({apple}: Param) => console.log(apple.count);
+
+    // ok
+    func({apple: {count: 0}});
+
+    // 얘가 왜 에러가 남?
+    func({mango: {count: 0}});
+}
+
+{
+    // 리액트 이벤트는 카멜 케이스로 표기
+    // 브라우저 고유 이벤트와 완전히 동일하게 작동하지는 않음
+    // 리액트 이벤트 핸들러는 이벤트 버블링 단계에서 호출
+    // 이벤트 캡처 단계에서 이벤트 핸들러를 등록하기 위해서는 onClickCapture, onChangeCapture와 같이 리스너 이름 뒤에 Capture를 붙여야 한다
+    // 브라우저 이벤트를 합성한 합성 이벤트(SyntheticEvent)를 제공
+    type EventHandler<Event extends React.SyntheticEvent> = (e: Event) => void | null;
+    type ChangeEventHandler = EventHandler<ChangeEvent<HTMLSelectElement>>;
+
+    const eventHandler1: GlobalEventHandlers["onchange"] = (e) => {
+        e.target; //일반 Event는 target이 없음
+    };
+
+    const eventHandler2: ChangeEventHandler = (e) => {
+        e.target; //리액트 이벤트(합성 이벤트)는 target이 있음
+    };
+
+    // 리액트 제공 기본 컴포는트도 SelectProps 처럼 각각 props에 대한 타입 명시
+    // 이벤트 핸들러도 해당 타입을 일치시켜야함
+    // React.ChangeEventHandler<HTMLSelectElement> 타입은 React.EventHandler<ChangeEvent<HTMLSelectElement>>와 동일 타입
+
+    // ChangeEvent<HTMLSelectElement> 타입의 이벤트를 매개변수로 받아 해당 이벤트를 처리하는 핸들러
+    const Select = ({onChnage, options, selectedOption}: SelectProps) => {
+        const handleChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+            const selected = Object.entries(options).find(
+                ([_, value]) => value === e.target.value
+            )?.[0];
+        };
+
+        return (
+            <select onChange={handleChange}>
+                {/** ... */}
+            </select>
+        );
+    };
+}
+
+{
+    // Select 컴포넌트를 사용하여 과일 선택 컴포넌트 
+    // useState 같은 함수 역시 타입 매개변수를 지정해서 반환되는 state 타입을 지정해 줄 수 있다
+    // 제네릭 타입을 명시하지 않으면 타입스크립트 컴파일러는 초깃값(default value)의 타입을 기반으로 state 타입을 추론한다
+    const fruits = {
+        apple: "사과",
+        banana: "바나나",
+        blueberry: "블루베리",
+    };
+
+    const FruitSelect: VFC = () => {
+        const [fruit, changeFruit] = useState<string | undefined>();
+
+        return (
+            <Select onChange={changeFruit} options={fruits} selectedOptions=
+        )
+    }
 }
